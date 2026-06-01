@@ -2,6 +2,7 @@ from astropy.io import fits
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.patches import Rectangle   
+
 informatie = fits.getheader('m44_1-0004_g.fit') #naam document 
 print(informatie)
 data_file = fits.getdata('m44_1-0004_g.fit') #naam document 
