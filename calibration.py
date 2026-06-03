@@ -8,35 +8,36 @@ from astropy.nddata import CCDData
 
 
 cal_loc = ("analyse/master_calibration")
-fits_loc = ("analyse/2_m44_chart1")
+fits_loc = ("analyse/2_m44_chart2")
 
-flat = fits.getdata(f"{cal_loc}/2_master_flat_r.fit")
-dark = fits.getdata(f"{cal_loc}/2_master_dark_60s.fit")
-bias = fits.getdata(f"{cal_loc}/2_master_bias.fit")
-light = fits.getdata(f"{fits_loc}/m44_1-0001_r.fit")
-#light = CCDData(fits.getdata(f"{fits_loc}/m44_1-0001_g.fit"), unit=u.adu)
-#bias = CCDData(fits.getdata(f"{cal_loc}/2_master_bias.fit"), unit=u.adu)
-#dark = CCDData(fits.getdata(f"{cal_loc}/2_master_dark_60s.fit"), unit=u.adu)
-#flat = CCDData(fits.getdata(f"{cal_loc}/2_master_flat_g.fit"), unit=u.adu)
-#dark.header = {'exptime': 60.0}
-#light.header = {'exptime': 60.0}
-gain_constant = 100
+filter = "i"
+darktime = "5s"
+set = "2"
+
+flat = fits.getdata(f"{cal_loc}/2_master_flat_{filter}.fit")
+dark = fits.getdata(f"{cal_loc}/2_master_dark_{darktime}.fit")
+#bias = fits.getdata(f"{cal_loc}/2_master_bias.fit")
+
 
 def calibration(light):
-    const_temp = dark-bias
     reduced = light - dark
-    reduced = reduced/(flat-dark)
-    reduced = reduced * gain_constant
-    #reduced = ccdp.subtract_bias(light, bias)
-    #reduced = ccdp.subtract_dark(reduced, dark, exposure_time="exptime", exposure_unit=u.second)
-    #reduced = ccdp.flat_correct(reduced, flat)
     return reduced
 
 
-calibratedfit = fits.PrimaryHDU(calibration(light))
+stacked_img = []
 
-calibratedfit.writeto("analyse/calibrated_img/2_m44_1-1_r.fit", overwrite=True)
->>>>>>> Stashed changes
+for i in range(24,33):
+    light = fits.getdata(f"{fits_loc}/m44_2-00{i+1}_{filter}_b.fit")
+    stacked_img.append(calibration(light))
 
-for i in range(10):
-    print("later for automation")
+#gain_constant = 26
+constant = 1
+
+stacked_img = np.sum(stacked_img, axis=0)
+stacked_img = stacked_img/flat
+stacked_img = stacked_img * constant
+calibratedfit = fits.PrimaryHDU(stacked_img)
+
+calibratedfit.header["filter"] = filter
+
+calibratedfit.writeto(f"analyse/calibrated_img/2_{set}_m44_{filter}_b.fit", overwrite=True)

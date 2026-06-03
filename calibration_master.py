@@ -170,27 +170,44 @@ dark_5s_1 = [
     "analyse/1_calibration/Calibration-0010_dark_5s.fit",
 ]
 
+dark_07s_2 = [
+    "analyse/2_calibration/Calibration-0001_07s.fit",
+    "analyse/2_calibration/Calibration-0002_07s.fit",
+    "analyse/2_calibration/Calibration-0003_07s.fit",
+    "analyse/2_calibration/Calibration-0004_07s.fit",
+    "analyse/2_calibration/Calibration-0005_07s.fit",
+    "analyse/2_calibration/Calibration-0006_07s.fit",
+    "analyse/2_calibration/Calibration-0007_07s.fit",
+    "analyse/2_calibration/Calibration-0008_07s.fit",
+    "analyse/2_calibration/Calibration-0009_07s.fit",
+    "analyse/2_calibration/Calibration-0010_07s.fit",
+]
+
+master_dark_flat = fits.getdata("analyse/master_calibration/2_master_dark_5s.fit")
+
 def mastercombining(list):
     allfits = [fits.getdata(i) for i in list]
-    stack = np.stack(allfits, axis=0)
 
-    clipped = sigma_clip(stack, sigma=5, axis=0, masked=False)
+    #maste_fit = []
+    #for i in allfits:
+    #    maste_fit.append(i - master_dark_flat)
 
-    masterfit = np.nanmean(clipped, axis=0) #masterfit = np.nanmean(clipped, axis=0)
+    masterfit = np.median(allfits, axis=0)
+
     return masterfit
 
-directory_mean2 = ["2_master_bias","2_master_flat_i","2_master_flat_r","2_master_flat_g","2_master_dark_1s","2_master_dark_0.5s","2_master_dark_5s","2_master_dark_60s", "1_master_bias", "1_master_flat_r", "1_master_flat_g", "1_master_dark_5s"]
-directory_list2 = [biases_2,flat_i_2,flat_r_2,flat_g_2,dark_1s_2,dark_05s_2,dark_5s_2,dark_60s_2, biases_1, flat_r_1, flat_g_1, dark_5s_1]
+directory_mean2 = ["2_master_bias","2_master_flat_i","2_master_flat_r","2_master_flat_g","2_master_dark_1s","2_master_dark_0.5s","2_master_dark_5s","2_master_dark_60s", "1_master_bias", "1_master_flat_r", "1_master_flat_g", "1_master_dark_5s", "2_master_dark_07s"]
+directory_list2 = [biases_2,flat_i_2,flat_r_2,flat_g_2,dark_1s_2,dark_05s_2,dark_5s_2,dark_60s_2, biases_1, flat_r_1, flat_g_1, dark_5s_1, dark_07s_2]
 
 #file to put in should be changed
 
-fileofmean = f"analyse/master_calibration/{directory_mean2[11]}.fit"
+fileofmean = f"analyse/master_calibration/{directory_mean2[12]}.fit"
 
-masterfit = fits.PrimaryHDU(mastercombining(directory_list2[11]))
+masterfit = fits.PrimaryHDU(mastercombining(directory_list2[12]))
 
 masterfit.header["TYPE"] = "dark" #"bias" "dark" "flat"
-masterfit.header["exposure"] = 5 #60 #.5 1 
-#masterfit.header["filter"] = "g" #"i" #"r" "g"
+masterfit.header["exposure"] = .7 #60 #.5 1 
+#masterfit.header["filter"] = "r" #"i" #"r" "g"
 
 masterfit.writeto(fileofmean, overwrite=True)
 
