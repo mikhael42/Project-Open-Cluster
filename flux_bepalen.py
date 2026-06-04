@@ -3,7 +3,6 @@ from astropy.visualization import ZScaleInterval, PowerStretch, ImageNormalize
 import matplotlib.pyplot as plt
 import numpy as np
 
-
 # %% meta-data
 
 informatie = fits.getheader('2_1_m44_g.fit') #voer hier de naam van jouw bestand in 
