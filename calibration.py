@@ -6,10 +6,10 @@ import astroalign as aa
 
 bright = True
 filter = "i"
-darktime = "5s"
+darktime = "1s"
 fov = "2"
-begin = 24
-end = 33
+begin = 1
+end = 23
 
 cal_loc = ("analyse/master_calibration")
 fits_loc = (f"analyse/2_m44_chart{fov}")
@@ -36,14 +36,16 @@ for i in range(begin,end):
 
 target = science_list[0]
 aligned_img = []
-for i in range(2,len(science_list)):
+for i in range(3,len(science_list)):
+    #if i == 17 or i == 18:
+    #    continue
     source = science_list[i]
     registered_image, footprint = aa.register(
     np.nan_to_num(source, nan=0.0, posinf=0.0, neginf=0.0),
-    np.nan_to_num(target, nan=0.0, posinf=0.0, neginf=0.0)
-)
+    np.nan_to_num(target, nan=0.0, posinf=0.0, neginf=0.0))
+    #plt.imshow(registered_image, vmin=np.min(registered_image), vmax=np.median(registered_image), cmap="gray")
+    #plt.show()
     aligned_img.append(registered_image)
-
 
 stacked_img = np.sum(aligned_img, axis=0)
 
