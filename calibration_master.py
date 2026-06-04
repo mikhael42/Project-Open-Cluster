@@ -188,11 +188,13 @@ master_dark_flat = fits.getdata("analyse/master_calibration/2_master_dark_5s.fit
 def mastercombining(list):
     allfits = [fits.getdata(i) for i in list]
 
-    #maste_fit = []
-    #for i in allfits:
-    #    maste_fit.append(i - master_dark_flat)
+    maste_fit = []
+    for i in allfits:
+        flat_temp = i - master_dark_flat
+        mean = np.mean(flat_temp)
+        maste_fit.append(flat_temp/mean)
 
-    masterfit = np.median(allfits, axis=0)
+    masterfit = np.median(maste_fit, axis=0)
 
     return masterfit
 
@@ -201,13 +203,13 @@ directory_list2 = [biases_2,flat_i_2,flat_r_2,flat_g_2,dark_1s_2,dark_05s_2,dark
 
 #file to put in should be changed
 
-fileofmean = f"analyse/master_calibration/{directory_mean2[12]}.fit"
+fileofmean = f"analyse/master_calibration/{directory_mean2[3]}.fit"
 
-masterfit = fits.PrimaryHDU(mastercombining(directory_list2[12]))
+masterfit = fits.PrimaryHDU(mastercombining(directory_list2[3]))
 
-masterfit.header["TYPE"] = "dark" #"bias" "dark" "flat"
-masterfit.header["exposure"] = .7 #60 #.5 1 
-#masterfit.header["filter"] = "r" #"i" #"r" "g"
+masterfit.header["TYPE"] = "flat" #"bias" "dark" "flat"
+#masterfit.header["exposure"] = .7 #60 #.5 1 
+masterfit.header["filter"] = "g" #"i" #"r" "g"
 
 masterfit.writeto(fileofmean, overwrite=True)
 
