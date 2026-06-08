@@ -7,11 +7,12 @@ import photutils
 import photutils.detection
 from photutils.aperture import CircularAnnulus, CircularAperture, aperture_photometry, ApertureStats
 from astropy.modeling import models, fitting
+import pandas as pd
 
 # %% Data inladen
-data_file_i = np.asarray(fits.getdata('2_60s_m44_i.fit'), dtype=np.float32)
-data_file_g = np.asarray(fits.getdata('2_60s_m44_g.fit'), dtype=np.float32)
-data_file_r = np.asarray(fits.getdata('2_60s_m44_r.fit'), dtype=np.float32)
+data_file_i = np.asarray(fits.getdata('1_60s_m44_i.fit'), dtype=np.float32)
+data_file_g = np.asarray(fits.getdata('1_60s_m44_g.fit'), dtype=np.float32)
+data_file_r = np.asarray(fits.getdata('1_60s_m44_r.fit'), dtype=np.float32)
 
 # %% Alignment naar i als referentie
 aligned_g, _ = aa.register(data_file_g, data_file_i)
@@ -49,18 +50,25 @@ def vind_sterren(data_file, threshold):
 
     # Stap 2: echte detectie met gemeten FWHM
     finder_echt = photutils.detection.DAOStarFinder(threshold, fwhm=gem_fwhm)
-    return finder_echt.find_stars(data_file)
+    temp = finder_echt.find_stars(data_file)
+
+    print(temp.columns)
+    
+    with open("temp.csv", "w") as f:
+        for i in temp:
+            f.writelines(str(i))
+    return temp
 
 # %% Sterren zoeken ALLEEN in i (referentiefilter)
 ans_ref = vind_sterren(data_file_i, threshold=1700)
 
 # overbelichte sterren weghalen
-mask = ans_ref['peak'] < 700000
+mask = ans_ref['peak'] < 800000
 ans_ref = ans_ref[mask]
 print(f"Aantal sterren na saturatiefilter: {len(ans_ref)}")
 
 # %% Aperture photometry op dezelfde posities in alle drie filters
-positions = np.column_stack((ans_ref['xcentroid'], ans_ref['ycentroid']))
+positions = np.column_stack((ans_ref['xcentroid'], ans_ref['ycentroid'], ))
 
 aperture = CircularAperture(positions, r=10)
 annulus  = CircularAnnulus(positions, r_in=15, r_out=20)
@@ -101,17 +109,32 @@ plt.figure(figsize=(7, 7))
 plt.scatter(kleur_ri, phot_r['mag'], s=10, color='black')
 
 for i, (x_val, y_val) in enumerate(zip(kleur_ri, phot_r['mag']), start=1):
-        plt.annotate(
-            str(i),              # tekst: 1, 2, 3, ...
-            (x_val, y_val),      # positie van het punt
-            xytext=(5, 5),       # verschuiving t.o.v. het punt
-            textcoords="offset points"
-            )
+    plt.annotate(
+    str(i),              # tekst: 1, 2, 3, ...
+    (x_val, y_val),      # positie van het punt
+    xytext=(5, 5),       # verschuiving t.o.v. het punt
+    textcoords="offset points"
+    )
 
 plt.xlabel('r − i  (kleur)')
 plt.ylabel('Instrumentele magnitude (r)')
 plt.gca().invert_yaxis()
 
-plt.savefig('check_hr.png')
+plt.savefig('check_hr_1.png')
 
+#tabel = pd.DataFrame({
+    #'ster_idx':   np.arange(1, len(ans_ref) + 1),
+    #'x':         np.array(ans_ref['xcentroid']),
+    #'y':         np.array(ans_ref['ycentroid']),
+    #'flux_i':    np.array(phot_i['flux_netto']),
+    #'flux_g':    np.array(phot_g['flux_netto']),
+    #'flux_r':    np.array(phot_r['flux_netto']),
+    #'mag_i':     np.array(phot_i['mag']),
+    #'mag_g':     np.array(phot_g['mag']),
+    ##'mag_r':     np.array(phot_r['mag']),
+#})
+
+#print(type.phot_g)
+#print(tabel)
+#tabel.to_csv('fov_2_sterren_gegevens.csv', index=False)
 #misschien heeft het te maken met het feit dat sommige sterren niet zo goed te zien zijn in andere filters dan i
